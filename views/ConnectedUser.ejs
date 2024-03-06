@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            position: relative;
+        }
+
+        .container {
+            height: 100vh;
+            background: lightgray;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .popup {
+            width: 50%;
+            height: 40vh;
+            background: white;
+            margin: 0 auto;
+            position: absolute;
+            top: 20%;
+            left: 40%;
+            box-shadow: 1px 1px 10px black;
+            padding: 2rem;
+            overflow: auto;
+        }
+
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Room</h2>
+    <div id="users"></div>
+
+    <div class="container" onclick="closePopup()">
+        <div class="popup hide" id="popup" onclick="event.stopPropagation()">
+        User Info
+        </div>
+    </div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        let popup = document.querySelector(".popup");
+
+        function toggle(e) {
+            e.stopPropagation();
+            popup.classList.toggle("hide");
+        }
+        function closePopup() {
+
+            if (!popup.classList.contains("hide")) {
+                popup.classList.toggle("hide");
+            }
+        }
+
+        $(document).ready(function () {
+            async function getUser() {
+                const user = await $.get('/users')
+                let usersHTML = '';
+                
+                user.forEach(user => {
+                    const { newUser, socketID } = user;
+                    usersHTML +=
+                        `
+                    <div >
+                        <p><strong>Email id:</strong> <span>${newUser.emailId }</span></p>
+                        <p><strong>Socket id:</strong><span>${socketID }</span></p>
+                        </div>
+                        <hr>
+                    `;
+                });
+                $('#users').html(usersHTML);
+
+
+
+                const div = document.querySelectorAll('#users div');
+                for (let i = 0; i < div.length; i++) {
+                    div[i].addEventListener('click', () => {
+                        // console.log(div[i].lastElementChild.lastChild.innerHTML)
+                        let getUser = {}
+                      user.map((person)=>{
+                            if(person.socketID ==div[i].lastElementChild.lastChild.innerHTML){
+                                getUser = person.newUser
+                            }
+                        })
+                        let UserDetails = ""
+                        UserDetails +=
+                        `
+                    <div >
+                        <p><strong>Full Name :</strong> <span>${getUser.firstName} ${getUser.lastName}</span></p>
+                        <p><strong>Mobile No :</strong> <span>${getUser.mobileNo}</span></p>
+                        <p><strong>loginId :</strong> <span>${getUser.loginId}</span></p>
+                        <p><strong>emailId :</strong> <span>${getUser.emailId}</span></p>
+                        <p><strong>Street :</strong> <span>${getUser.address.street}</span></p>
+                        <p><strong>Street :</strong> <span>${getUser.address.city}</span></p>
+                        <p><strong>Street :</strong> <span>${getUser.address.state}</span></p>
+                        <p><strong>Street :</strong> <span>${getUser.address.country}</span></p>
+                        </div>
+                        <hr>
+                    `;
+                        $('#popup').html(UserDetails)
+                        toggle(event)
+                    })
+                }
+
+            } getUser()
+        })
+    </script>
+</body>
+
+</html>
